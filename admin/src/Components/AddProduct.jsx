@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import upload_area from "./Assets/upload_area.svg";
+import { toast } from "react-toastify";
 
 const AddProduct = () => {
-  const [image, setImage] = useState(false);
+  const [image, setImage] = useState(null);
   const [productDetails, setProductDetails] = useState({
     name: "",
     image: "",
@@ -14,41 +15,69 @@ const AddProduct = () => {
     description: "",
     qty: "",
   });
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const newErrors = {};
+    if (!productDetails.name) newErrors.name = "Product name is required.";
+    if (!image) newErrors.image = "Product image is required.";
+    if (!productDetails.old_price) newErrors.old_price = "Price is required.";
+    if (!productDetails.qty || productDetails.qty <= 0)
+      newErrors.qty = "Quantity must be greater than 0.";
+    if (!productDetails.description) newErrors.description = "Description is required.";
+    if (!productDetails.highlights) newErrors.highlights = "Highlights are required.";
+    if (!productDetails.details) newErrors.details = "Details are required.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const AddProduct = async () => {
+    if (!validate()) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+
     let dataObj;
-    let product = productDetails;
+    let product = { ...productDetails };
 
     let formData = new FormData();
     formData.append("product", image);
 
-    await fetch("http://localhost:4000/upload", {
-      method: "POST",
-      headers: {
-        Accept: "application/json"
-      },
-      body: formData
-    })
-      .then((resp) => resp.json())
-      .then((data) => {
-        dataObj = data;
-      });
-
-    if (dataObj.success) {
-      product.image = dataObj.image_url;
-      console.log(product);
-      await fetch("http://localhost:4000/addproduct", {
+    try {
+      const uploadResponse = await fetch("http://localhost:4000/upload", {
         method: "POST",
         headers: {
           Accept: "application/json",
-          "Content-Type": "application/json"
         },
-        body: JSON.stringify(product)
-      })
-        .then((resp) => resp.json())
-        .then((data) =>
-          data.success ? alert("Product Added") : alert("Failed")
-        );
+        body: formData,
+      });
+      dataObj = await uploadResponse.json();
+
+      if (dataObj.success) {
+        product.image = dataObj.image_url;
+
+        const addProductResponse = await fetch("http://localhost:4000/addproduct", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(product),
+        });
+
+        const addProductResult = await addProductResponse.json();
+
+        if (addProductResult.success) {
+          toast.success("Product added successfully!");
+        } else {
+          toast.error("Failed to add the product.");
+        }
+      } else {
+        toast.error("Image upload failed.");
+      }
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
     }
   };
 
@@ -63,7 +92,7 @@ const AddProduct = () => {
   return (
     <div className="w-full max-w-2xl p-8 mx-6 my-4 bg-white rounded-md box-border">
       <div className="w-full text-gray-500 text-base mb-6">
-        <p className="font-medium mb-2">Product title</p>
+        <p className="font-medium mb-2">Product Title</p>
         <input
           type="text"
           name="name"
@@ -72,7 +101,10 @@ const AddProduct = () => {
           placeholder="Type here"
           className="w-full h-12 rounded-md pl-4 border border-gray-300 outline-none text-gray-500 text-sm font-medium"
         />
+        {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
       </div>
+
+      {/* Price, Offer Price, Quantity */}
       <div className="flex gap-10 mb-6">
         <div className="w-full text-gray-500 text-base">
           <p className="font-medium mb-2">Price</p>
@@ -84,6 +116,7 @@ const AddProduct = () => {
             placeholder="Type here"
             className="w-full h-12 rounded-md pl-4 border border-gray-300 outline-none text-gray-500 text-sm font-medium"
           />
+          {errors.old_price && <p className="text-red-500 text-sm">{errors.old_price}</p>}
         </div>
         <div className="w-full text-gray-500 text-base">
           <p className="font-medium mb-2">Offer Price</p>
@@ -95,6 +128,7 @@ const AddProduct = () => {
             placeholder="Type here"
             className="w-full h-12 rounded-md pl-4 border border-gray-300 outline-none text-gray-500 text-sm font-medium"
           />
+          {errors.new_price && <p className="text-red-500 text-sm">{errors.new_price}</p>}
         </div>
         <div className="w-full text-gray-500 text-base">
           <p className="font-medium mb-2">Quantity</p>
@@ -106,25 +140,11 @@ const AddProduct = () => {
             placeholder="Type here"
             className="w-full h-12 rounded-md pl-4 border border-gray-300 outline-none text-gray-500 text-sm font-medium"
           />
+          {errors.qty && <p className="text-red-500 text-sm">{errors.qty}</p>}
         </div>
       </div>
 
-      <div className="w-full text-gray-500 text-base mb-6">
-        <p className="font-medium mb-2">Product category</p>
-        <select
-          value={productDetails.category}
-          name="category"
-          className="w-full h-12 rounded-md pl-4 border border-gray-300 text-gray-500 text-sm font-medium"
-          onChange={changeHandler}
-        >
-          <option value="Clothing">Clothing</option>
-          <option value="Electronics">Electronics</option>
-          <option value="Merch">Merch</option>
-          <option value="Stationary">Stationary</option>
-          <option value="Snacks">Snacks</option>
-        </select>
-      </div>
-      
+      {/* Image */}
       <div className="w-full text-gray-500 text-base mb-6">
         <p className="font-medium mb-2">Product Image</p>
         <label htmlFor="file-input">
@@ -141,6 +161,7 @@ const AddProduct = () => {
           id="file-input"
           className="hidden"
         />
+        {errors.image && <p className="text-red-500 text-sm">{errors.image}</p>}
       </div>
       <div className="w-full text-gray-500 text-base mb-6">
         <p className="font-medium mb-2">Description</p>

@@ -278,6 +278,15 @@ const Orders = mongoose.model("Orders", {
   total: {
     type: Number
   },
+  address: {
+    type: String
+  },
+  city: {
+    type: String
+  },
+  payment_method: {
+    type: String
+  }
 
 });
 
@@ -338,7 +347,11 @@ app.post('/confirm', fetchuser, async (req, res) => {
       id: id, // You can generate a unique order ID here
       user: userData.email, // Assuming req.user.id contains the ID of the authenticated user
       products: orderedProducts,
-      total: totalPrice
+      total: totalPrice,
+      address: req.body.address,
+      city: req.body.city,
+      payment_method: req.body.paymentType,
+
     });
 
     // Save the order to the database
