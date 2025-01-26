@@ -47,7 +47,7 @@ const EditProduct = ({ product, onSave, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 overflow-y-auto w-[500px]">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 overflow-y-auto w-[500px] z-50">
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl mb-4">Edit Product</h2>
         <form onSubmit={submitEdit}>
