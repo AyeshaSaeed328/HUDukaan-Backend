@@ -259,10 +259,7 @@ app.post('/getcart', fetchuser, async (req, res) => {
 
 
 const Orders = mongoose.model("Orders", {
-  id: {
-    type: Number,
-    required: true,
-  },
+  
   user: {
     type: String,
     required: true,
@@ -312,9 +309,6 @@ app.post('/confirm', fetchuser, async (req, res) => {
         // Find the product by its ID
         let product = await Product.findOne({ id: parseInt(itemId) });
         userData.cartData[itemId] = 0;
-        // console.log(itemId);
-        // console.log(userData.cartData[itemId]);
-        // console.log(userData.email);
 
 
         // If product is found, add it to the ordered products array
@@ -334,17 +328,9 @@ app.post('/confirm', fetchuser, async (req, res) => {
       let product = await Product.findById(orderedProduct.product);
       totalPrice += product.new_price * orderedProduct.quantity;
     }
-    let orders = await Orders.find({});
-    let id;
-    if (orders.length > 0) {
-      let last_order_array = orders.slice(-1);
-      let last_order = last_order_array[0];
-      id = last_order.id + 1;
-    }
-    else { id = 1; }
+    
     // Create a new order document
     const order = new Orders({
-      id: id, // You can generate a unique order ID here
       user: userData.email, // Assuming req.user.id contains the ID of the authenticated user
       products: orderedProducts,
       total: totalPrice,
@@ -374,7 +360,7 @@ app.get("/getorders", async (req, res) => {
 });
 
 app.post("/removeorder", async (req, res) => {
-  const order = await Orders.findOneAndDelete({ id: req.body.id });
+  const order = await Orders.findOneAndDelete({ _id: req.body._id });
   console.log("Removed");
   res.json({ success: true, name: req.body.name })
 });

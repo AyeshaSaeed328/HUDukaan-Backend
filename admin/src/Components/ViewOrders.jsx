@@ -34,17 +34,31 @@ const ViewOrders = () => {
     });
   };
 
-  const removeOrder = async (id) => {
-    await fetch("http://localhost:4000/removeorder", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: id }),
-    });
-    fetchOrders();
+  const removeOrder = async (_id) => {
+    try {
+      const response = await fetch("http://localhost:4000/removeorder", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ _id }),
+      });
+  
+      const result = await response.json();
+  
+      if (response.ok && result.success) {
+        console.log("Order removed successfully:", result.name);
+  
+        fetchOrders();
+      } else {
+        console.error("Failed to remove order:", result);
+      }
+    } catch (error) {
+      console.error("Error occurred while removing order:", error);
+    }
   };
+  
 
   return (
     <div className="flex flex-col items-center w-full h-[740px] p-6 bg-white rounded-lg shadow-md my-8">
@@ -66,7 +80,7 @@ const ViewOrders = () => {
           key={order.id}
           className="grid grid-cols-[1fr_2fr_1fr_1fr_2fr_1fr_1fr] gap-4 items-center border-b p-4 text-gray-700 text-center text-sm"
         >
-          <p className="truncate">{order.id}</p>
+          <p className="truncate">{order._id}</p>
           <p className="truncate">{order.user}</p>
           <p className="truncate">{order.date}</p>
           <p className="truncate">${order.total}</p>
@@ -86,7 +100,7 @@ const ViewOrders = () => {
           </div>
           <img
             className="cursor-pointer w-6 h-6 mx-auto"
-            onClick={() => removeOrder(order.id)}
+            onClick={() => removeOrder(order._id)}
             src={cross_icon}
             alt="Remove"
           />
